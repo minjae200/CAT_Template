@@ -11,7 +11,10 @@ from CCC.Helper.DateHelper import *
 # Create your views here.
 def MainView(request):
     latest_job_list = Job.objects.all().order_by('build_start_time')[:10]
-    context = {'latest_job_list': latest_job_list}
+    context = {
+        'latest_job_list': latest_job_list,
+        'username': "minjae.choi"
+    }
     return render(request, 'main.html', context)
 
 def DetailView(request, job_id):
@@ -39,7 +42,10 @@ def DetailView(request, job_id):
 
 def AbortView(request, job_id):
     print("ABORT!!!")
-    # return HttpResponseRedirect(reverse('CCC:detail', args=(job_id,)))
+    try:
+        Job.objects.filter(pk=job_id).delete()
+    except:
+        pass
     return HttpResponseRedirect(reverse('CCC:main'))
 
 def ForceStartView(request, job_id):
@@ -47,20 +53,21 @@ def ForceStartView(request, job_id):
     return HttpResponseRedirect(reverse('CCC:main'))
 
 def CreateView(request):
-    param = {}
     if request.method == 'POST':
         form = JobForm(request.POST)
-        if not form.is_valid() or form.cleaned_data['branch'] == '':
-            return HttpResponseRedirect(reverse('CCC:create'))
-        build_time = get_time(request.POST.get('build_date'), request.POST.get('build_time'))
-        if build_time is None:
-            build_time = default_start_time()
-        new_job = Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time)
-        form = JobForm()
     else:
         form = JobForm(request.GET)
     return render(request, 'create.html', {'form': form})
 
 def CreateJobView(request):
     print("CREATE JOB!")
+    if request.method == 'POST':
+        form = JobForm(request.POST)
+        if not form.is_valid() or form.cleaned_data['branch'] == '':
+            return HttpResponseRedirect(reverse('CCC:create'))
+        build_time = get_time(request.POST.get('build_date'), request.POST.get('build_time'))
+        new_job = Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time)
+        form = JobForm()
+    else:
+        form = JobForm(request.GET)
     return HttpResponseRedirect(reverse('CCC:main'))

@@ -1,3 +1,6 @@
+{% extends "base.html" %}
+
+{% block content %}
 {% if job %}
 <h2> {{ job.branch }} </h2>
 <h2> Build Start Date - {{ job.build_start_time }}</h2>
@@ -23,3 +26,4 @@
 <input type="submit" value="back" />
 </form>
 {% endif %}
+{% endblock content %}

@@ -1,6 +1,6 @@
 <h2>Create Job</h2>
 
-<form action="{% url 'CCC:create' %}" method="post">
+<form action="{% url 'CCC:register' %}" method="post">
 {% csrf_token %}
 {{ form.as_p }}
     <p>
