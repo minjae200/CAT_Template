@@ -1,5 +1,5 @@
 from django.db import models
-from CCC.Helper.DataHelper import *
+from CCC.Helper.DateHelper import *
 
 # Create your models here.
 class Job(models.Model):

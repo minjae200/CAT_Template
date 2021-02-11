@@ -6,7 +6,7 @@ from django.contrib import messages
 from CCC.models import Job, Module
 from CCC.forms import ModuleForm, JobForm
 from CCC.Helper.ViewHelper import *
-from CCC.Helper.DataHelper import *
+from CCC.Helper.DateHelper import *
 
 # Create your views here.
 def MainView(request):
@@ -50,12 +50,12 @@ def CreateView(request):
     param = {}
     if request.method == 'POST':
         form = JobForm(request.POST)
-        if not form.is_valid():
-            print("INVALID")
+        if not form.is_valid() or form.cleaned_data['branch'] == '':
             return HttpResponseRedirect(reverse('CCC:create'))
-        print(form.cleaned_data['branch'])
-        print(request.POST.get('build_time'))
-        print(request.POST.get('build_date'))
+        build_time = get_time(request.POST.get('build_date'), request.POST.get('build_time'))
+        if build_time is None:
+            build_time = default_start_time()
+        new_job = Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time)
         form = JobForm()
     else:
         form = JobForm(request.GET)
