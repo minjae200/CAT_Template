@@ -1,0 +1,25 @@
+{% if job %}
+<h2> {{ job.branch }} </h2>
+<h2> Build Start Date - {{ job.build_start_time }}</h2>
+<h2> CCC Module List </h2>
+<ol>
+{% for module in job.module_set.all %}
+    <li>{{ module.name }} - {{ module.tag }} - {{ module.hash_value }}</li>
+{% endfor %}
+<form action="{% url 'CCC:detail' job.id %}" method="post">
+    {% csrf_token %}
+    {{ form }} 
+    <input type="submit" value="Add" />
+    {% if messages %}
+        {% for message in messages|slice:":1" %}
+            {{ message.message }}
+        {% endfor %}
+    {% endif %}
+</form>
+</ol>
+
+<form action="{% url 'CCC:main' %}" method="post">
+{% csrf_token %}
+<input type="submit" value="back" />
+</form>
+{% endif %}

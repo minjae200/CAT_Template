@@ -1,0 +1,46 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'table.css' %}">
+
+<title>TV Broadcast Solution</title>
+<h2> CCC Job List </h2>
+<br>
+
+<form action="{% url 'CCC:create' %}" method="post">
+{% csrf_token %}
+    <input type="submit" value="CREATE" />
+</form>
+{% if latest_job_list %}
+    <table class="main_table">
+        <thead>
+        <tr>
+            <th><b>Register job</b></th>
+            <th><b>Start Time</b></th>
+            <th><b> Options </b><th>
+        </tr></thead>
+        <tbody>
+            {% for job in latest_job_list %}
+        <tr>
+            <th>{{ job.branch }}</td>
+            <th>{{ job.build_start_time | date:'y-m-d H:i' }}</td>
+            <td>
+            <form action="{% url 'CCC:detail' job.id %}" method="post">
+            {% csrf_token %}
+                <input type="submit" value="Detail" />
+            </form>
+            <td>
+            <form action="{% url 'CCC:start' job.id %}" method="post" onclick="return confirm('정말 시작?')">
+            {% csrf_token %}
+                <input type="submit" value="Start" />
+            </form>
+            </td>
+            <td>
+            <form action="{% url 'CCC:abort' job.id %}" method="post" onclick="return confirm('정말 그만둠?')">
+            {% csrf_token %}
+                <input type="submit" value="Abort" />
+            </form>
+            </td>
+        </tr>
+        </tbody>
+    {% endfor %}
+    </table>
+{% endif %}
