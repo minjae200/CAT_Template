@@ -2,13 +2,30 @@
 
 {% block content %}
 {% if job %}
-<h2> {{ job.branch }} </h2>
-<h2> Build Start Date - {{ job.build_start_time }}</h2>
-<h2> CCC Module List </h2>
-<ol>
-{% for module in job.module_set.all %}
-    <li>{{ module.name }} - {{ module.tag }} - {{ module.hash_value }}</li>
-{% endfor %}
+<h2> {{ job.branch }} ( {{ job.build_start_time }}) </h2><br>
+<h5> CCC Module List </h5>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col"><b> No </b></th>
+            <th scope="col"><b> Module</b></th>
+            <th scope="col"><b> Tag</b></th>
+            <th scope="col"><b> Hash</b></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for module in job.module_set.all %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ module.name }}</td>
+            <td>{{ module.tag }}</td>
+            <td>{{ module.hash_value }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
 <form action="{% url 'CCC:detail' job.id %}" method="post">
     {% csrf_token %}
     {{ form }} 
@@ -19,8 +36,6 @@
         {% endfor %}
     {% endif %}
 </form>
-</ol>
-
 <form action="{% url 'CCC:main' %}" method="post">
 {% csrf_token %}
 <input type="submit" value="back" />

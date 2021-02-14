@@ -1,63 +1,156 @@
 {% extends "base.html" %}
-
-{% block title %} TV Broadcast Solution {% endblock %}
-
+{% load static %}
 {% block content %}
-<div class="p-3 mb-2 bg-danger text-white">
-<h1>TV Broadcast Solution CCC</h1>
-</div>
-<br>
-<div class="btn-group">
-    <a href="{% url 'CCC:create' %}" class="btn btn-info">
-        CREATE
-    </a>
-    <!-- <form action="{% url 'CCC:create' %}" method="post" class="btn btn-info">
-    {% csrf_token %}
-        <input type="submit" value="CREATE" />
-    </form> -->
-</div>
+<head>
+  <link rel="stylesheet" href="{% static 'offcanvas.css' %}">
+</head>
 
-{% if latest_job_list %}
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col"><b> No </b></th>
-                <th scope="col"><b> Register job</b></th>
-                <th scope="col"><b> Start Time</b></th>
-                <th scope="col"><b> User Name</b></th>
-                <!-- <th scope="col"><b> Options </b><th>
-                <th scope="col"><b> Status </b></th> -->
-            </tr>
-        </thead>
-        <tbody>
-            {% for job in latest_job_list %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ job.branch }}</td>
-                <td>{{ job.build_start_time | date:'y-m-d H:i' }}</td>
-                <td>{{ username }}</td>
-                <td>
-                <a href="{% url 'CCC:detail' job.id %}"
-                    class="btn btn-primary">
-                    DETAIL
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark" aria-label="Main navigation">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">TV Broadcast Solution CCC</a>
+    <button class="navbar-toggler p-0 border-0" type="button" data-bs-toggle="offcanvas" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
+        </li>
+      </ul>
+      <a href="" class="btn btn-outline-success" data-toggle="modal" data-target="#createModal">
+        <small>CREATE</small>
+      </a>
+    </div>    
+    <!-- Create Modal -->
+    <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" data-backdrop="false">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="createModalLabel">Create Job</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          </div>
+          <form action="{% url 'CCC:create' %}" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+              {{ form.as_p }}
+              <p>
+              <label id="build_date">Build Date : </label>
+              <input id="build_date" type="date" name="build_date">
+              </p>
+              <p>
+              <label id="build_time">Build Time : </label>
+              <input id="build_time" type="time" name="build_time">
+              </p>
+            </div>
+          <div class="modal-footer">
+              <input class="btn btn-primary" type="submit" name="create" value="Create">
+            </form>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="d-flex align-items-center p-3 my-3 text-white bg-purple rounded shadow-sm">
+    <div class="lh-1">
+      <h1 class="h6 mb-0 text-white lh-1">Job Dashboard</h1>
+      <small>latest update 2021.02.11</small>
+    </div>
+  </div>
+  {% if latest_job_list %}
+  <table class="table">
+      <thead>
+          <tr>
+              <th scope="col"><b> No </b></th>
+              <th scope="col"><b> Register job</b></th>
+              <th scope="col"><b> Start Time</b></th>
+              <th scope="col"><b> User Name</b></th>
+              <th scope="col"><b> Summary </b></th>
+          </tr>
+      </thead>
+      <tbody>
+          {% for job in latest_job_list %}
+          <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ job.branch }}</td>
+              <td>{{ job.build_start_time | date:'y-m-d H:i' }}</td>
+              <td>{{ username }}</td>
+              <td>
+              {% for module in job.module_set.all|slice:":5" %}
+                [{{ module.name }}]
+              {% endfor %}
+              </td>
+              <td>
+                <!-- <a href="{% url 'CCC:detail' job.id %}"
+                  class="btn btn-primary">
+                  DETAIL
+                </a> -->
+                <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#detailModal"
+                  data-job_branch="{{ job.branch }}"
+                  data-job_time="{{ job.build_start_time | date:'y-m-d H:i' }}"
+                  data-job_modules=
+                    "{% for module in job.module_set.all %}{{module}} {% endfor %}">
+                  DETAIL
                 </a>
-                <td>
+                <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="detailModalLabel"> ... </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <h5> CCC Module List </h5>
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              <th scope="col"><b> No </b></th>
+                              <th scope="col"><b> Module</b></th>
+                              <th scope="col"><b> Tag</b></th>
+                              <th scope="col"><b> Hash</b></th>
+                            </tr>
+                          </thead>
+                          <tbody> </tbody>
+                        </table>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
                 <a href="{% url 'CCC:start' job.id %}"
                     onclick="return confirm('정말 시작?')"
                     class="btn btn-success">
                     START
                 </a>
-                </td>
-                <td>
                 <a href="{% url 'CCC:abort' job.id %}"
                     onclick="return confirm('정말 삭제?')"
                     class="btn btn-danger">
                     ABORT
                 </a>
-                </td>
-            </tr>
-        </tbody>
-    {% endfor %}
+              </td>
+          </tr>
+          {% endfor %}
+      </tbody>
     </table>
-{% endif %}
-{% endblock %}
+  {% endif %}
+    <small class="d-block text-end mt-3">
+      <a href="#">All updates</a>
+    </small>
+  </div>
+  </div>
+</main>
+</body>
+
+<script src="{% static 'offcanvas.js' %}"></script>
+<script src="{% static 'detail.js' %}"></script>
+{% endblock content %}

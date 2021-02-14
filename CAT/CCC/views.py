@@ -10,12 +10,19 @@ from CCC.Helper.DateHelper import *
 
 # Create your views here.
 def MainView(request):
-    latest_job_list = Job.objects.all().order_by('build_start_time')[:10]
-    context = {
-        'latest_job_list': latest_job_list,
-        'username': "minjae.choi"
-    }
-    return render(request, 'main.html', context)
+    if request.method == 'GET':
+        latest_job_list = Job.objects.all().order_by('-build_start_time')[:15]
+        form = JobForm(request.GET)
+        context = {
+            'latest_job_list': latest_job_list,
+            'username': "minjae.choi",
+            'form': form
+        }
+        return render(request, 'main.html', context)
+    else:
+        form = JobForm(request.POST)
+        return HttpResponseRedirect(reverse('CCC:create'))
+
 
 def DetailView(request, job_id):
     job = get_object_or_404(Job, pk=job_id)
@@ -37,7 +44,7 @@ def DetailView(request, job_id):
         else:
             form = ModuleForm(request.GET)
         return render(request, 'detail.html', {'job': job, 'form': form})
-    except (KeyError, Module.DoesNotExist):
+    except (KeyError, Job.DoesNotExist):
         return render(request, 'main.html')
 
 def AbortView(request, job_id):
@@ -52,22 +59,16 @@ def ForceStartView(request, job_id):
     print("START!!")
     return HttpResponseRedirect(reverse('CCC:main'))
 
-def CreateView(request):
-    if request.method == 'POST':
-        form = JobForm(request.POST)
-    else:
-        form = JobForm(request.GET)
-    return render(request, 'create.html', {'form': form})
-
 def CreateJobView(request):
     print("CREATE JOB!")
     if request.method == 'POST':
+        print("request post!")
         form = JobForm(request.POST)
-        if not form.is_valid() or form.cleaned_data['branch'] == '':
-            return HttpResponseRedirect(reverse('CCC:create'))
-        build_time = get_time(request.POST.get('build_date'), request.POST.get('build_time'))
-        new_job = Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time)
+        if form.is_valid() and form.cleaned_data['branch'] != '':
+            build_time = get_time(request.POST.get('build_date'), request.POST.get('build_time'))
+            Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time)
         form = JobForm()
     else:
+        print("request get!")
         form = JobForm(request.GET)
     return HttpResponseRedirect(reverse('CCC:main'))
