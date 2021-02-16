@@ -4,26 +4,24 @@ from django.http import HttpResponseRedirect, HttpResponse, HttpRequest, JsonRes
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.contrib import messages
+from django.core.paginator import Paginator
 from CCC.models import Job, Module
 from CCC.forms import ModuleForm, JobForm
 from CCC.Helper.ViewHelper import *
 from CCC.Helper.DateHelper import *
 
 # Create your views here.
-current_page = 1
-def MainView(request, page=None, *args, **kwargs):
-    global current_page
-    if page is None: page = current_page
-    start_index = (page-1) * 15
-    end_index = start_index + 15
-    latest_job_list = Job.objects.all().order_by('-build_start_time')[start_index:end_index]
+def MainView(request):
+    latest_job_list = Job.objects.all().order_by('-build_start_time')
+    paginator = Paginator(latest_job_list, 10)
+    page = request.GET.get('page')
+    latest_job_list = paginator.get_page(page)
     form = JobForm(request.GET)
     context = {
         'latest_job_list': latest_job_list,
         'username': "minjae.choi",
         'form': form
     }
-    current_page = page
     return render(request, 'main.html', context)
 
 def DetailModalView(request, job_id):
@@ -118,4 +116,4 @@ def CreateJobView(request):
     else:
         print("request get!")
         form = JobForm(request.GET)
-    return HttpResponseRedirect(reverse('CCC:main', kwargs={'page': 1}))
+    return HttpResponseRedirect(reverse('CCC:main'))

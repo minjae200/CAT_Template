@@ -1,6 +1,6 @@
 var id;
 $('#detailModal').on('show.bs.modal', function (event) {
-
+  console.log("!!!!")
   var button = $(event.relatedTarget)
   var branch = button.data('job_branch') 
   var build_time = button.data('job_time')
