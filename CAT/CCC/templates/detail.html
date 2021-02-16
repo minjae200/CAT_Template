@@ -1,8 +1,3 @@
-{% extends "base.html" %}
-
-{% block content %}
-{% if job %}
-<h2> {{ job.branch }} ( {{ job.build_start_time }}) </h2><br>
 <h5> CCC Module List </h5>
 <table class="table">
     <thead>
@@ -20,25 +15,13 @@
             <td>{{ module.name }}</td>
             <td>{{ module.tag }}</td>
             <td>{{ module.hash_value }}</td>
+            <td>
+                <button type="button"
+                    class="btn btn-outline-danger btn-sm"
+                    onclick="deleteModule(`{{job.id}}`, `{{module.id}}`)">
+                    delete
+                </button></td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-
-
-<form action="{% url 'CCC:detail' job.id %}" method="post">
-    {% csrf_token %}
-    {{ form }} 
-    <input type="submit" value="Add" />
-    {% if messages %}
-        {% for message in messages|slice:":1" %}
-            {{ message.message }}
-        {% endfor %}
-    {% endif %}
-</form>
-<form action="{% url 'CCC:main' %}" method="post">
-{% csrf_token %}
-<input type="submit" value="back" />
-</form>
-{% endif %}
-{% endblock content %}

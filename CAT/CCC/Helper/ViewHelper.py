@@ -8,6 +8,6 @@ def is_exist_module(job, data):
     queryset = job.module_set.all()
     exist = False
     for query in queryset:
-        if data['name'] in query.name:
+        if data['name'] == query.name:
             exist = True
     return exist

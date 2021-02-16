@@ -16,4 +16,4 @@ class Module(models.Model):
     hash_value = models.CharField(max_length=100)
 
     def __str__(self):
-        return '{}_{}_{}'.format(self.name, self.tag, self.hash_value)
+        return '{}_{}_{}_{}'.format(self.name, self.tag, self.hash_value, self.id)

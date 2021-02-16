@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.views import generic
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, HttpRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.contrib import messages
 from CCC.models import Job, Module
@@ -9,43 +10,89 @@ from CCC.Helper.ViewHelper import *
 from CCC.Helper.DateHelper import *
 
 # Create your views here.
-def MainView(request):
-    if request.method == 'GET':
-        latest_job_list = Job.objects.all().order_by('-build_start_time')[:15]
-        form = JobForm(request.GET)
-        context = {
-            'latest_job_list': latest_job_list,
-            'username': "minjae.choi",
-            'form': form
-        }
-        return render(request, 'main.html', context)
-    else:
-        form = JobForm(request.POST)
-        return HttpResponseRedirect(reverse('CCC:create'))
+current_page = 1
+def MainView(request, page=None, *args, **kwargs):
+    global current_page
+    if page is None: page = current_page
+    start_index = (page-1) * 15
+    end_index = start_index + 15
+    latest_job_list = Job.objects.all().order_by('-build_start_time')[start_index:end_index]
+    form = JobForm(request.GET)
+    context = {
+        'latest_job_list': latest_job_list,
+        'username': "minjae.choi",
+        'form': form
+    }
+    current_page = page
+    return render(request, 'main.html', context)
 
+def DetailModalView(request, job_id):
+    job = get_object_or_404(Job, pk=job_id)
+    context = {
+        'job': job
+    }
+    return render(request, 'detail.html', context)
 
 def DetailView(request, job_id):
-    job = get_object_or_404(Job, pk=job_id)
     try:
-        if request.method == 'POST':
-            form = ModuleForm(request.POST)
-            if form.is_valid():
-                if not is_valid_module(form.cleaned_data):
-                    pass
-                elif is_exist_module(job, form.cleaned_data):
-                    messages.info(request, 'Already exist the module')
-                else:
-                    module_name = form.cleaned_data['name']
-                    module_tag = form.cleaned_data['tag']
-                    module_hash = form.cleaned_data['hash_value']
-                    new_module = Module.objects.create(job=job, name=module_name, tag=module_tag, hash_value=module_hash)
-                    new_module.save()
-                form = ModuleForm()
+        job = get_object_or_404(Job, pk=job_id)
+        if request.method=='POST':
+            module_name = request.POST['module_name']
+            module_tag = request.POST['module_tag']
+            module_hash = request.POST['module_hash']
+            module = {
+                'name': module_name,
+                'tag': module_tag,
+                'hash_value': module_hash
+            }
+            if not is_valid_module(module):
+                # messages.warning(request, 'Please input the module')
+                module['messages'] = {
+                    'type': 'warning',
+                    'content': 'Please input the module'
+                }
+            elif is_exist_module(job, module):
+                # messages.warning(request, 'Already exist the module')
+                module['messages'] = {
+                    'type': 'warning',
+                    'content': 'Already exist the module'
+                }
+            else:
+                new_module = Module.objects.create(job=job, name=module_name, tag=module_tag, hash_value=module_hash)
+                new_module.save()
+                # messages.success(request, 'Register Success')
+                module['messages'] = {
+                    'type': 'success',
+                    'content': 'Register Success'
+                }
         else:
-            form = ModuleForm(request.GET)
-        return render(request, 'detail.html', {'job': job, 'form': form})
-    except (KeyError, Job.DoesNotExist):
-        return render(request, 'main.html')
+            module = {}
+    except:
+        pass
+    return JsonResponse(module)
+
+@csrf_exempt
+def DeleteModuleView(request, job_id, module_id):
+    result = {'messages': {'type': '', 'content': ''}}
+    try:
+        job = get_object_or_404(Job, pk=job_id)
+        if request.method == 'POST':
+            module = job.module_set.all().filter(pk=module_id)
+            module_name = module[0].name
+            module.delete()
+            result['messages'] = {
+                'type': 'success',
+                'content': 'Delete Success! ({})'.format(module_name)
+            }
+        else:
+            pass
+    except Exception as Error:
+        result['messages'] = {
+            'type': 'warning',
+            'content': '{}'.format(Error)
+        }
+    finally:
+        return JsonResponse(result)
 
 def AbortView(request, job_id):
     print("ABORT!!!")
@@ -71,4 +118,4 @@ def CreateJobView(request):
     else:
         print("request get!")
         form = JobForm(request.GET)
-    return HttpResponseRedirect(reverse('CCC:main'))
+    return HttpResponseRedirect(reverse('CCC:main', kwargs={'page': 1}))

@@ -16,7 +16,7 @@
     <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
+          <a class="nav-link active" aria-current="page" href="{% url 'CCC:main' 1 %}">Dashboard</a>
         </li>
       </ul>
       <a href="" class="btn btn-outline-success" data-toggle="modal" data-target="#createModal">
@@ -44,7 +44,7 @@
               <input id="build_time" type="time" name="build_time">
               </p>
             </div>
-          <div class="modal-footer">
+            <div class="modal-footer">
               <input class="btn btn-primary" type="submit" name="create" value="Create">
             </form>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -55,22 +55,24 @@
   </div>
 </nav>
 
-<main class="container">
+<main class="container-fluid">
   <div class="d-flex align-items-center p-3 my-3 text-white bg-purple rounded shadow-sm">
     <div class="lh-1">
-      <h1 class="h6 mb-0 text-white lh-1">Job Dashboard</h1>
+      <h1 class="h6 mb-1 text-white lh-1">Job Dashboard</h1>
       <small>latest update 2021.02.11</small>
     </div>
   </div>
   {% if latest_job_list %}
-  <table class="table">
+  <table class="table table-hover">
       <thead>
           <tr>
               <th scope="col"><b> No </b></th>
               <th scope="col"><b> Register job</b></th>
               <th scope="col"><b> Start Time</b></th>
-              <th scope="col"><b> User Name</b></th>
+              <th scope="col"><b> Assignee </b></th>
               <th scope="col"><b> Summary </b></th>
+              <th scope="col"><b> Option </b></th>
+              <th scope="col"><b> Status </b></th>
           </tr>
       </thead>
       <tbody>
@@ -86,15 +88,12 @@
               {% endfor %}
               </td>
               <td>
-                <!-- <a href="{% url 'CCC:detail' job.id %}"
-                  class="btn btn-primary">
-                  DETAIL
-                </a> -->
-                <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#detailModal"
-                  data-job_branch="{{ job.branch }}"
-                  data-job_time="{{ job.build_start_time | date:'y-m-d H:i' }}"
-                  data-job_modules=
-                    "{% for module in job.module_set.all %}{{module}} {% endfor %}">
+                <a href="#" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#detailModal"
+                    data-job_branch="{{ job.branch }}"
+                    data-job_time="{{ job.build_start_time | date:'y-m-d H:i' }}"
+                    data-job_modules=
+                      "{% for module in job.module_set.all %}{{module}} {% endfor %}"
+                    data-job_id="{{job.id}}">
                   DETAIL
                 </a>
                 <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
@@ -106,22 +105,48 @@
                           <span aria-hidden="true">&times;</span>
                         </button>
                       </div>
-                      <div class="modal-body">
+
+                      <div class="footer-alert-messages"> </div>
+                      <div class="modal-body" id="modalBody">
                         <h5> CCC Module List </h5>
                         <table class="table">
                           <thead>
                             <tr>
                               <th scope="col"><b> No </b></th>
-                              <th scope="col"><b> Module</b></th>
-                              <th scope="col"><b> Tag</b></th>
-                              <th scope="col"><b> Hash</b></th>
+                              <th scope="col"><b> Module </b></th>
+                              <th scope="col"><b> Tag </b></th>
+                              <th scope="col"><b> Hash </b></th>
+                              <th scope="col"><b> Option </b></th>
                             </tr>
                           </thead>
                           <tbody> </tbody>
                         </table>
                       </div>
                       <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <div class="col-sm-9">
+                          <form id="moduleAddForm" name="moduleAddForm">
+                            {% csrf_token %}
+                            <div class="row">
+                            <div class="col-4 col-sm-3">
+                              <label for="module-name" class="col-form-label">Module</label>
+                              <input type="text" class="form-control" id="module-name" name="module_name">
+                            </div>
+                            <div class="col-4 col-sm-3">
+                              <label for="module-tag" class="col-form-label">Tag</label>
+                              <input type="text" class="form-control" id="module-tag" name="module_tag">
+                            </div>
+                            <div class="col-4 col-sm-6">
+                              <label for="module-hash" class="col-form-label">Hash</label>
+                              <input type="text" class="form-control" id="module-hash" name="module_hash">
+                            </div>
+                          </div>
+                        </form>
+                      </div>
+                        <button type="button" class="btn btn-primary" id="detailAdd">Add</button>
+                        <form name="detailCloseForm">
+                          {% csrf_token %}
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal" id="detailClose" name="detailClose">Close</button>
+                        </form>
                       </div>
                     </div>
                   </div>
@@ -129,15 +154,16 @@
                 
                 <a href="{% url 'CCC:start' job.id %}"
                     onclick="return confirm('정말 시작?')"
-                    class="btn btn-success">
+                    class="btn btn-outline-success btn-sm">
                     START
                 </a>
                 <a href="{% url 'CCC:abort' job.id %}"
                     onclick="return confirm('정말 삭제?')"
-                    class="btn btn-danger">
+                    class="btn btn-outline-danger btn-sm">
                     ABORT
                 </a>
               </td>
+              <td><h5><span class="badge rounded-pill bg-primary text-white ">scheduled</span></h5></td>
           </tr>
           {% endfor %}
       </tbody>
@@ -149,8 +175,24 @@
   </div>
   </div>
 </main>
-</body>
-
+<nav aria-label="Page navigation example">
+  <ul class="pagination justify-content-end pagination-sm">
+    <li class="page-item">
+      <a class="page-link" href="#" tabindex="-1" onclick="PageMove({'option': 'previous'})">Previous</a>
+    </li>
+    <!-- <li class="page-item"><a class="page-link" href="{% url 'CCC:main' 1 %}">1</a></li>
+    <li class="page-item"><a class="page-link" href="{% url 'CCC:main' 2 %}">2</a></li>
+    <li class="page-item"><a class="page-link" href="{% url 'CCC:main' 3 %}">3</a></li> -->
+    <li class="page-item"><a class="page-link" href="#" onclick="PageMove(1)">1</a></li>
+    <li class="page-item"><a class="page-link" href="#" onclick="PageMove(2)">2</a></li>
+    <li class="page-item"><a class="page-link" href="#" onclick="PageMove(3)">3</a></li>
+    <li class="page-item">
+      <a class="page-link" href="#" onclick="PageMove(option='next')">Next</a>
+    </li>
+  </ul>
+</nav>
 <script src="{% static 'offcanvas.js' %}"></script>
-<script src="{% static 'detail.js' %}"></script>
+<script src="{% static 'detail_job.js' %}"></script>
+<script src="{% static 'main_button.js' %}"></script> 
+</body>
 {% endblock content %}
