@@ -8,11 +8,10 @@
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark" aria-label="Main navigation">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">TV Broadcast Solution CCC</a>
+    <a class="navbar-brand" href="{% url 'CCC:main' %}">TV Broadcast Solution CCC</a>
     <button class="navbar-toggler p-0 border-0" type="button" data-bs-toggle="offcanvas" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-
     <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
@@ -20,47 +19,20 @@
         </li>
       </ul>
       <a href="" class="btn btn-outline-success" data-toggle="modal" data-target="#createModal">
-        <small>CREATE</small>
+        <small class="h6 mb-1 text-white">CREATE</small>
       </a>
-    </div>    
-    <!-- Create Modal -->
-    <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" data-backdrop="false">
-      <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="createModalLabel">Create Job</h4>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          </div>
-          <form action="{% url 'CCC:create' %}" method="post">
-            {% csrf_token %}
-            <div class="modal-body">
-              {{ form.as_p }}
-              <p>
-              <label id="build_date">Build Date : </label>
-              <input id="build_date" type="date" name="build_date">
-              </p>
-              <p>
-              <label id="build_time">Build Time : </label>
-              <input id="build_time" type="time" name="build_time">
-              </p>
-            </div>
-            <div class="modal-footer">
-              <input class="btn btn-primary" type="submit" name="create" value="Create">
-            </form>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
+      {% include 'create_modal.html' %}
     </div>
+    <small class="text-white">latest update 2021.02.11 </small> 
   </div>
 </nav>
 
 <main class="container-fluid">
-  <div class="d-flex align-items-center p-3 my-3 text-white bg-purple rounded shadow-sm">
-    <div class="lh-1">
-      <h1 class="h6 mb-1 text-white lh-1">Job Dashboard</h1>
-      <small>latest update 2021.02.11</small>
-    </div>
+  <div class="d-flex p-3 my-3 text-white bg-purple rounded shadow-sm">
+      <h1 class="h5 mb-1 text-white col-9 ">Job Dashboard</h1>
+      <div class="col-3 offset-md-2">
+          {% include 'pagination.html' %}
+      </div>
   </div>
   <table class="table table-hover">
       <thead>
@@ -82,7 +54,7 @@
               <td>{{ job.build_start_time | date:'y-m-d H:i' }}</td>
               <td>{{ username }}</td>
               <td>
-              {% for module in job.module_set.all|slice:":5" %}
+              {% for module in job.module_set.all|slice:":3" %}
                 [{{ module.name }}]
               {% endfor %}
               </td>
@@ -95,62 +67,7 @@
                     data-job_id="{{job.id}}">
                   DETAIL
                 </a>
-                <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-xl">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="detailModalLabel"> ... </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">&times;</span>
-                        </button>
-                      </div>
-
-                      <div class="footer-alert-messages"> </div>
-                      <div class="modal-body" id="modalBody">
-                        <h5> CCC Module List </h5>
-                        <table class="table">
-                          <thead>
-                            <tr>
-                              <th scope="col"><b> No </b></th>
-                              <th scope="col"><b> Module </b></th>
-                              <th scope="col"><b> Tag </b></th>
-                              <th scope="col"><b> Hash </b></th>
-                              <th scope="col"><b> Option </b></th>
-                            </tr>
-                          </thead>
-                          <tbody> </tbody>
-                        </table>
-                      </div>
-                      <div class="modal-footer">
-                        <div class="col-sm-9">
-                          <form id="moduleAddForm" name="moduleAddForm">
-                            {% csrf_token %}
-                            <div class="row">
-                            <div class="col-4 col-sm-3">
-                              <label for="module-name" class="col-form-label">Module</label>
-                              <input type="text" class="form-control" id="module-name" name="module_name">
-                            </div>
-                            <div class="col-4 col-sm-3">
-                              <label for="module-tag" class="col-form-label">Tag</label>
-                              <input type="text" class="form-control" id="module-tag" name="module_tag">
-                            </div>
-                            <div class="col-4 col-sm-6">
-                              <label for="module-hash" class="col-form-label">Hash</label>
-                              <input type="text" class="form-control" id="module-hash" name="module_hash">
-                            </div>
-                          </div>
-                        </form>
-                      </div>
-                        <button type="button" class="btn btn-primary" id="detailAdd">Add</button>
-                        <form name="detailCloseForm">
-                          {% csrf_token %}
-                          <button type="button" class="btn btn-secondary" data-dismiss="modal" id="detailClose" name="detailClose">Close</button>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
+                {% include 'detail_modal.html' %}
                 <a href="{% url 'CCC:start' job.id %}"
                     onclick="return confirm('정말 시작?')"
                     class="btn btn-outline-success btn-sm">
@@ -167,25 +84,17 @@
           {% endfor %}
       </tbody>
     </table>
-    <small class="d-block text-end mt-3">
+    <!-- <small class="d-block text-end mt-3">
       <a href="#">All updates</a>
-    </small>
+    </small> -->
   </div>
   </div>
-  {% if latest_job_list.has_previous %}
-    <a href="?page=1">맨 앞으로</a>
-    <a href="?page={{latest_job_list.previous_page_number}}">이전으로</a>
-  {% endif %}
-  <span>{{latest_job_list.number}}</span>
-  <span>/</span>
-  <span>{{latest_job_list.paginator.num_pages}}</span>
-  {% if latest_job_list.has_next %}
-    <a href="?page={{latest_job_list.next_page_number}}">다음으로</a>
-    <a href="?page={{latest_job_list.paginator.num_pages}}">맨 뒤로</a>
-  {% endif %}
 </main>
+</body>
 <script src="{% static 'offcanvas.js' %}"></script>
 <script src="{% static 'detail_job.js' %}"></script>
 <script src="{% static 'main_button.js' %}"></script>
-</body>
 {% endblock content %}
+
+{% block footer %}
+{% endblock %}
