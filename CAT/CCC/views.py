@@ -9,6 +9,7 @@ from CCC.models import Job, Module
 from CCC.forms import ModuleForm, JobForm
 from CCC.Helper.ViewHelper import *
 from CCC.Helper.DateHelper import *
+from CCC.Helper.ThreadHelper import ThreadPool
 
 # Create your views here.
 def MainView(request):
@@ -112,6 +113,8 @@ def CreateJobView(request):
         if form.is_valid() and form.cleaned_data['branch'] != '':
             build_time = get_time(request.POST.get('build_date'), request.POST.get('build_time'))
             Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time)
+            # Thread(1) - Scheduler -> Build Start -> Observer create
+            
         form = JobForm()
     else:
         print("request get!")
