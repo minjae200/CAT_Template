@@ -114,7 +114,6 @@ def CreateJobView(request):
             build_time = get_time(request.POST.get('build_date'), request.POST.get('build_time'))
             Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time)
             # Thread(1) - Scheduler -> Build Start -> Observer create
-            
         form = JobForm()
     else:
         print("request get!")

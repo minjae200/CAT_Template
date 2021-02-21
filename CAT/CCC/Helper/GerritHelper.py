@@ -2,8 +2,17 @@ from CCC.Helper.RestHelper import Rest
 
 class Gerrit(Rest):
 
-    def __init__(self, username, password):
-        super().__init__(username, password)
+    def __init__(self, user):
+        super().__init__(user)
+
+    def start_CCC(self):
+        self.git_clone_meta_lg_webos()
+        self.checkout_branch()
+        self.modify_bb_file()
+        self.git_push()
+        self.set_build_message()
+        self.press_tas_button()
+        self.press_make_ticket()
 
     def git_clone_meta_lg_webos(self):
         # git clone meta-lg-webos repository
@@ -18,6 +27,7 @@ class Gerrit(Rest):
         pass
 
     def modify_bb_file(self):
+        self.find_bb_file()
         # file open 
         # write append
         # close file

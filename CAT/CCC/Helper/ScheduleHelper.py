@@ -1,16 +1,22 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.base import JobLookupError
+from CCC.Helper.GerritHelper import Gerrit
 import time
 
 class Scheduler:
     
-    def __init__(self):
+    def __init__(self, user):
+        self.user = user
         self.worker = BackgroundScheduler()
         self.worker.start()
 
     def __del__(self):
         print("Scheduler 가 삭제되었습니다.")
         self.worker.shutdown()
+
+    def register(self, job):
+        self.job = job
+        self.add_job(job=job, func=None)
 
     def add_job(self, job, func):
         """
@@ -26,40 +32,22 @@ class Scheduler:
         end_date (datetime|str) – latest possible date/time to trigger on (inclusive)
         timezone (datetime.tzinfo|str) – time zone to use for the date/time calculations (defaults to scheduler timezone)
         """
+        if func is None: func = self.run_job
         self.worker.add_job(func, 'cron',
                             year=job.build_time.year, month=job.build_time.month,
                             day=job.build_time.day, hour=job.build_time.hour,
                             minute=job.build_time.minute, second=0,
-                            id=job.id, args=('cron', job.id))
+                            id=job.id, args=(job.id))
         
-    def remove_job(self, job):
+    def remove_job(self, job_id):
         try:
-            self.worker.remove_job(job.id)
+            self.worker.remove_job(job_id)
         except JobLookupError as error:
             print("Does not exist the scheduler : {}".format(error))
             return
-
-
-if __name__ == '__main__':
-    print("start")
-    scheduler = Scheduler()
-    scheduler.add_job("1", lambda : print("!!"))
-    count = 0
-    while count < 300:
-        time.sleep(1)
-        count += 1
-    scheduler.remove_job("1")
-    # count = 0
-    # while True:
-    #     '''
-    #     count 제한할 경우 아래와 같이 사용
-    #     '''
-    #     print("Running main process")
-    #     time.sleep(1)
-    #     count += 1
-    #     if count == 10:
-    #         scheduler.kill_scheduler("1")
-    #         print("Kill cron Scheduler")
-    #     elif count == 15:
-    #         scheduler.kill_scheduler("2")
-    #         print("Kill interval Scheduler")
+    
+    def run_job(self, job_id):
+        gerrit = Gerrit(self.user)
+        gerrit.start_CCC()
+        self.remove_job(job_id)
+        return True

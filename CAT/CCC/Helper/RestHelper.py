@@ -3,9 +3,12 @@ from requests.auth import HTTPBasicAuth
 
 class Rest:
 
-    def __init__(self, username='', password='', *args, **kwargs):
-        self.username = username
-        self.password = password
+    def __init__(self, user, *args, **kwargs):
+        try:
+            self.username = user['name']
+            self.password = user['password']
+        except:
+            raise ValueError('Invalid user information')
 
         self.auth = HTTPBasicAuth(self.username, self.password)
         self.headers = {
