@@ -10,10 +10,10 @@ class ModuleAdmin(admin.ModelAdmin):
 
 class JobAdmin(admin.ModelAdmin):
     fieldsets = [
-        ('Job Information', {'fields': ['branch', 'build_start_time']}),
+        ('Job Information', {'fields': ['branch', 'build_start_time', 'assignee']}),
     ]
     inlines = [ModuleInline]
-    list_display = ('branch', 'build_start_time')
+    list_display = ('branch', 'build_start_time', 'assignee')
 
 # Register your models here.
 admin.site.register(Job, JobAdmin)

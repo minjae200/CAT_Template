@@ -17,9 +17,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.LoginView, name='login'),
+    path('accounts/login/', views.RequiredView, name='loginRequired'),
     path('CCC/', include('CCC.urls')),
 ]
 

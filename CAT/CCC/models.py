@@ -5,9 +5,10 @@ from CCC.Helper.DateHelper import *
 class Job(models.Model):
     build_start_time = models.DateTimeField('build start time', default=default_start_time, blank=True)
     branch = models.CharField(max_length=100)
+    assignee = models.CharField(max_length=100, default="unknown")
 
     def __str__(self):
-        return '{}_{}'.format(self.branch, self.build_start_time)
+        return '{}_{}_{}'.format(self.branch, self.build_start_time, self.assignee)
 
 class Module(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE)

@@ -22,8 +22,18 @@
         <small class="h6 mb-1 text-white">CREATE</small>
       </a>
       {% include 'create_modal.html' %}
+      <div class="container-sm">
+        <form class="d-flex">
+          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+      </div>
     </div>
-    <small class="text-white">latest update 2021.02.11 </small> 
+    <a href="{% url 'CCC:logout' %}"
+        class="btn btn-outline-success btn-sm">
+        Logout
+    </a>
+    <div class="text-white">{{ department }} - {{ username }}</div>
   </div>
 </nav>
 
@@ -52,7 +62,7 @@
               <td>{{ forloop.counter }}</td>
               <td>{{ job.branch }}</td>
               <td>{{ job.build_start_time | date:'y-m-d H:i' }}</td>
-              <td>{{ username }}</td>
+              <td>{{ job.assignee }}</td>
               <td>
               {% for module in job.module_set.all|slice:":3" %}
                 [{{ module.name }}]

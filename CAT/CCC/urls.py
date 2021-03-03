@@ -4,6 +4,7 @@ from . import views
 app_name = 'CCC'
 urlpatterns = [
     path('', views.MainView, name='main'),
+    path('logout', views.LogoutView, name='logout'),
     path('create/', views.CreateJobView, name='create'),
     path('<int:job_id>/', views.DetailView, name='detail'),
     path('<int:job_id>/detail/', views.DetailModalView, name='detailmodal'),

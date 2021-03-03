@@ -1,17 +1,20 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.http import HttpResponseRedirect, HttpResponse, HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.contrib import messages
+from django.contrib.auth import logout as auth_logout
 from django.core.paginator import Paginator
 from CCC.models import Job, Module
 from CCC.forms import ModuleForm, JobForm
 from CCC.Helper.ViewHelper import *
 from CCC.Helper.DateHelper import *
 from CCC.Helper.ThreadHelper import ThreadPool
+from CCC.Helper.LoginHelper import login_required
 
 # Create your views here.
+@login_required
 def MainView(request):
     latest_job_list = Job.objects.all().order_by('-build_start_time')
     paginator = Paginator(latest_job_list, 10)
@@ -20,10 +23,16 @@ def MainView(request):
     form = JobForm(request.GET)
     context = {
         'latest_job_list': latest_job_list,
-        'username': "minjae.choi",
+        'username': request.session['username'],
+        'password': request.session['password'],
+        'department': request.session['department'],
         'form': form
     }
     return render(request, 'main.html', context)
+
+def LogoutView(request):
+    auth_logout(request)
+    return redirect('login')
 
 def DetailModalView(request, job_id):
     job = get_object_or_404(Job, pk=job_id)
@@ -112,7 +121,7 @@ def CreateJobView(request):
         form = JobForm(request.POST)
         if form.is_valid() and form.cleaned_data['branch'] != '':
             build_time = get_time(request.POST.get('build_date'), request.POST.get('build_time'))
-            Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time)
+            Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time, assignee=request.session['username'])
             # Thread(1) - Scheduler -> Build Start -> Observer create
         form = JobForm()
     else:
