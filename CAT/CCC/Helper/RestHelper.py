@@ -5,7 +5,7 @@ class Rest:
 
     def __init__(self, user, *args, **kwargs):
         try:
-            self.username = user['name']
+            self.username = user['username']
             self.password = user['password']
         except:
             raise ValueError('Invalid user information')

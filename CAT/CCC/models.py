@@ -8,7 +8,7 @@ class Job(models.Model):
     assignee = models.CharField(max_length=100, default="unknown")
 
     def __str__(self):
-        return '{}_{}_{}'.format(self.branch, self.build_start_time, self.assignee)
+        return '{}_{}_{}_{}'.format(self.id, self.branch, self.build_start_time, self.assignee)
 
 class Module(models.Model):
     job = models.ForeignKey(Job, on_delete=models.CASCADE)

@@ -9,16 +9,26 @@ class ThreadPool:
         self.job = job
         self.user = user
         self.thread_pool = ThreadPoolExecutor(max_workers=workers)
+    
+    def __del__(self):
+        print("delete thread")
+
+    def done(self):
+        print("DONE")
+        self.thread_pool.shutdown(wait=False)
 
     def run(self):
-        self._run_observer()
+        print("This is ThreadPool Run function")
         self._run_scheduler()
+        # self._run_observer()
 
     def _run_scheduler(self):
         self.scheduler = Scheduler(self.user)
-        scheduler_futures = [self.thread_pool.submit(self.scheduler.register, self.job)]
-        for result in as_completed(scheduler_futures):
-            print(result)
+        self.scheduler.register(self.job)
+        # scheduler_futures = [self.thread_pool.submit(self.scheduler.register, self.job)]
+        # for result in as_completed(scheduler_futures):
+        #     print(result)
+        #     self.done()
     
     def _run_observer(self):
         self.observer = Viewer()

@@ -12,6 +12,9 @@ from CCC.Helper.ViewHelper import *
 from CCC.Helper.DateHelper import *
 from CCC.Helper.ThreadHelper import ThreadPool
 from CCC.Helper.LoginHelper import login_required
+from CCC.Helper.ScheduleHelper import Scheduler
+
+scheduler = {}
 
 # Create your views here.
 @login_required
@@ -105,8 +108,16 @@ def DeleteModuleView(request, job_id, module_id):
 def AbortView(request, job_id):
     print("ABORT!!!")
     try:
-        Job.objects.filter(pk=job_id).delete()
-    except:
+        job = Job.objects.filter(pk=job_id)[0]
+        try:
+            scheduler[job.id].remove_job(job.id)
+            if scheduler[job.id]:
+                del scheduler[job.id]
+        except:
+            pass
+        job.delete()
+    except Exception as Error:
+        print("AbortView Error : {}".format(Error))
         pass
     return HttpResponseRedirect(reverse('CCC:main'))
 
@@ -117,14 +128,17 @@ def ForceStartView(request, job_id):
 def CreateJobView(request):
     print("CREATE JOB!")
     if request.method == 'POST':
-        print("request post!")
         form = JobForm(request.POST)
         if form.is_valid() and form.cleaned_data['branch'] != '':
             build_time = get_time(request.POST.get('build_date'), request.POST.get('build_time'))
-            Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time, assignee=request.session['username'])
-            # Thread(1) - Scheduler -> Build Start -> Observer create
+            job = Job.objects.create(branch=form.cleaned_data['branch'], build_start_time=build_time, assignee=request.session['username'])
+            user = {
+                'username': request.session['username'],
+                'password': request.session['password']
+            }
+            scheduler[job.id] = Scheduler(user=user)
+            scheduler[job.id].register(job=job)
         form = JobForm()
     else:
-        print("request get!")
         form = JobForm(request.GET)
     return HttpResponseRedirect(reverse('CCC:main'))

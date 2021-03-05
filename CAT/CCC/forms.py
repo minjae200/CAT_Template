@@ -14,9 +14,9 @@ class ModuleForm(forms.Form):
 
 class JobForm(forms.Form):
     BRANCH_CHOICES = (
-        ("45.kalaupapa", "45.kalaupapa"),
-        ("webos4tv", "webos4tv"),
-        ("jardine", "jardine"),
-        ("jcl4tv", "jcl4tv"),
+        ("@45.kalaupapa", "@45.kalaupapa"),
+        ("@webos4tv", "@webos4tv"),
+        ("@jardine", "@jardine"),
+        ("@kcl4tv", "@kcl4tv"),
     )
     branch = forms.ChoiceField(label='Branch', choices=BRANCH_CHOICES, required=False)

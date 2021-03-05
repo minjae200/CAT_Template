@@ -12,11 +12,10 @@ class Scheduler:
 
     def __del__(self):
         print("Scheduler 가 삭제되었습니다.")
-        self.worker.shutdown()
 
     def register(self, job):
         self.job = job
-        self.add_job(job=job, func=None)
+        self.add_job(job=job, func=self.run_job)
 
     def add_job(self, job, func):
         """
@@ -34,20 +33,20 @@ class Scheduler:
         """
         if func is None: func = self.run_job
         self.worker.add_job(func, 'cron',
-                            year=job.build_time.year, month=job.build_time.month,
-                            day=job.build_time.day, hour=job.build_time.hour,
-                            minute=job.build_time.minute, second=0,
-                            id=job.id, args=(job.id))
+                            year=job.build_start_time.year, month=job.build_start_time.month,
+                            day=job.build_start_time.day, hour=job.build_start_time.hour,
+                            minute=job.build_start_time.minute, second=0,
+                            id=str(job.id), args=[job])
         
     def remove_job(self, job_id):
         try:
-            self.worker.remove_job(job_id)
+            self.worker.remove_job(str(job_id))
         except JobLookupError as error:
-            print("Does not exist the scheduler : {}".format(error))
+            print("Alreay finish or Not exist the scheduler : {}".format(error))
             return
     
-    def run_job(self, job_id):
+    def run_job(self, job):
         gerrit = Gerrit(self.user)
-        gerrit.start_CCC()
-        self.remove_job(job_id)
+        gerrit.start_CCC(job)
+        # self.remove_job(job_id)
         return True
