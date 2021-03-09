@@ -17,7 +17,7 @@ class Gerrit(Rest):
     GIT_PUSH = 'git push origin HEAD:refs/for/{branch}'
     GIT_CONFIG_USER_NAME = 'git config --global user.name {username}'
     GIT_CONFIG_USER_EMAIL = 'git config --global user.email {useremail}'
-    GIT_RESET_AUTHOR = 'git commit --amend --reset-author'
+    GIT_RESET_AUTHOR = 'git commit --amend --reset-author --no-edit'
     GERRIT_ENDPOINT = 'https://wall.lge.com/a/changes/webos-pro%2Fmeta-lg-webos~'
 
 
@@ -47,16 +47,16 @@ class Gerrit(Rest):
             git_hook_chmod = self.GIT_HOOK_CHMOD.format(git_path=git_path)
             os.system('cd {} && '.format(self.working_directory) + git_hook_curl)
             os.system('cd {} && '.format(self.working_directory) + git_hook_chmod)
-            git_ = repo.git
-            git_.checkout("{}".format(self.job.branch))
-            git_.pull("--rebase")
+            self.git = repo.git
+            self.git.checkout("{}".format(self.job.branch))
+            self.git.pull("--rebase")
             print('git clone and checkout success')
         except Exception as Error:
             print('Error : {}'.format(Error))
 
     def _find_bb_file(self, module, job):
-        move_dir = 'cd {}'.format(self.working_directory)
-        location = subprocess.check_output(move_dir + '&&' + self.FIND_BB_FILE.format(module=module), shell=True, stderr=subprocess.STDOUT, encoding='utf-8')
+        move_dir = 'cd {} && '.format(self.working_directory)
+        location = subprocess.check_output(move_dir + self.FIND_BB_FILE.format(module=module), shell=True, stderr=subprocess.STDOUT, encoding='utf-8')
         if not location:
             location = subprocess.check_output(move_dir + self.FIND_INC_FILE.format(module=module), shell=True, stderr=subprocess.STDOUT, encoding='utf-8')
         return location.split('\n')[0] if location else None
@@ -84,14 +84,21 @@ class Gerrit(Rest):
     def git_push(self, directory = None, branch = None):
         if directory is not None:
             self.working_directory = directory
-        move_dir = 'cd {} &&'.format(self.working_directory)
-        os.system(move_dir + self.GIT_ADD_ALL)
-        os.system(move_dir + self.GIT_COMMIT)
+        move_dir = 'cd {} && '.format(self.working_directory)
+        print(self.git.status())
+        self.git.add()
+        self.git.commit("CCC automation")
+        self.git.push('origin', 'HEAD:refs/for/{}'.format(self.job.branch))
+        # os.system(move_dir + self.GIT_ADD_ALL)
+        # os.system(move_dir + self.GIT_COMMIT)
         # result = subprocess.check_output(self.GIT_PUSH.format(branch=self.job.branch), stderr=subprocess.STDOUT).decode('utf-8')
-        os.system(move_dir + self.GIT_CONFIG_USER_NAME.format(username='minjae.choi'))
-        os.system(move_dir + self.GIT_CONFIG_USER_EMAIL.format(useremail='minjae.choi@lge.com'))
-        os.system(move_dir + self.GIT_RESET_AUTHOR)
-        result = subprocess.check_output(move_dir + '&&' + self.GIT_PUSH.format(branch=branch), stderr=subprocess.STDOUT).decode('utf-8')
+        # os.system(move_dir + self.GIT_CONFIG_USER_NAME.format(username='minjae.choi'))
+        # os.system(move_dir + self.GIT_CONFIG_USER_EMAIL.format(useremail='minjae.choi@lge.com'))
+        # os.system(move_dir + self.GIT_RESET_AUTHOR)
+        try:
+            result = subprocess.check_output(move_dir + self.GIT_PUSH.format(branch=branch), stderr=subprocess.STDOUT, executable='/bin/bash').decode('utf-8')
+        except Exception as error:
+            print(error)
         print(type(result))
         print(result)
         # self.gerrit_id = ....
@@ -125,4 +132,4 @@ class Gerrit(Rest):
 if __name__ == '__main__':
 
     gerrit = Gerrit({'username': 'minjae.choi', 'password': 'sgu1064018@'})
-    gerrit.git_push(directory='../../Repo/93_meta-lg-webos', branch='@45.kalaupapa')
+    gerrit.git_push(directory='../../Repo/92_meta-lg-webos', branch='@jardine')
