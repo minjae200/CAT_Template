@@ -79,6 +79,7 @@ $('#detailModal').on('hide.bs.modal', function (event) {
   var close_form = document.detailCloseForm;
   close_form.action = "";
   close_form.method = "post";
+  close_form.submit();
   // var name = module_form.module_name.value
   // var tag = module_form.module_tag.value
   // var hash = module_form.module_hash.value

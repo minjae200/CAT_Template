@@ -13,7 +13,7 @@ class Rest:
         self.auth = HTTPBasicAuth(self.username, self.password)
         self.headers = {
             'accept': 'application/json',
-            'content-type': 'application/json',
+            'content-type': 'application/json;charset=UTF-8',
         }
 
     def get(self, target):

@@ -31,3 +31,6 @@ def login_required(view_func):
             else:
                 return django_login_required(view_func)(*args, **kwargs)
     return decorator
+
+if __name__ == '__main__':
+    authenticate('minjae.choi', 'sgu1064018@')
