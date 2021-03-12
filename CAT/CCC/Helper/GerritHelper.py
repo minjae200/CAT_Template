@@ -1,7 +1,7 @@
 import os, sys, json, git
 import subprocess
 from CCC.Helper.RestHelper import Rest
-#from RestHelper import Rest
+from CCC.Helper.ThreadHelper import ObserverPool
 
 class Gerrit(Rest):
 
@@ -22,10 +22,13 @@ class Gerrit(Rest):
     def __init__(self, user):
         super().__init__(user)
         self.user = user
-        self.job = None
-        self.working_directory = self.ROOT_DIR
-        self.gerrit_id = None
         self.repo_url = self.REPO_URL.format(username=user['username'])
+        self.job = None
+        self.gerrit_id = None
+        self.working_directory = None
+
+        # for observer
+        self.status = 'READY'
 
     def start_CCC(self, job):
         self.job = job
@@ -34,6 +37,34 @@ class Gerrit(Rest):
         self._modify_bb_file()
         self._git_push()
         self._set_ccc_options()
+
+        observer = ObserverPool(job=job, user=self.user)
+        observer.run_observer(page_id=self.gerrit_id)
+
+    # for observer
+    def get_status(self, gerrit_id):
+        target = self.GERRIT_ENDPOINT + '{gerrit_id}/detail'.format(gerrit_id=gerrit_id)
+        response = self.get(target=target)
+        response = json.loads(response.text.replace(']]}\'', ''))
+
+        for resp in reversed(response['message']):
+            if 'Uploaded patch set 1.' in resp:
+                self.status = 'START'
+            elif 'CCC Ticket created' in resp:
+                self.status = 'MAKE TICKET'
+            elif 'Start: https://cerberus.lge.com/jenkins/job' in resp:
+                self.status = 'BUILDING'
+            elif 'Build Successful' in resp:
+                self.status = 'BUILD SUCCESS'
+            elif 'Triggerd' in resp:
+                self.status = 'TESTING'
+            elif 'TV MiniBAT Results' in resp:
+                if 'PASSED' in resp:
+                    self.status = 'TEST PASS'
+                else:
+                    self.status = 'TEST FAIL'
+            elif 'Change has been successfully cherry-picked as':
+                self.status = 'COMPLETE'
 
     def _git_clone_meta_lg_webos(self):
         if os.path.exists(self.working_directory):
@@ -117,8 +148,8 @@ class Gerrit(Rest):
         
         gerrit_id = json.loads(response.text.replace(')]}\'', ''))[0]['_number']
         print(gerrit_id)
-        return gerrit_id 
-
+        return gerrit_id
+    
     def _get_patchset(self, gerrit_id):
         target = self.GERRIT_ENDPOINT + '{gerrit_id}/comments'.format(gerrit_id=gerrit_id)
         response = self.get(target=target)

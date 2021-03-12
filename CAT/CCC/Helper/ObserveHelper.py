@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from CCC.Helper.GerritHelper import Gerrit
 from CCC.Helper.JiraHelper import Jira
+# from django.shortcuts import redirect
 import threading, time
 
 class Subject:
@@ -57,21 +58,21 @@ class GerritSubject(Subject):
             observer.update(page_type='gerrit', status=self.status)
 
     def get_status(self):
-        return []
+        return self.gerrit.get_status()
 
     def set_status(self, status):
         self.status = status
         self.notify_observers()
 
-    def observe(self):
+    def observe(self, gerrit_id):
         while True:
-            status = self.get_status()
-            if status:
+            status = self.get_status(gerrit_id=gerrit_id)
+            if status != self.status:
                 self.set_status(status)
-            if 'Complete' in status:
+            if 'COMPLETE' in status:
                 break
-            time.sleep(60)
-        return 'Gerrit Complete'
+            time.sleep(30)
+        return True
 
 class JiraSubject(Subject):
 
@@ -97,7 +98,7 @@ class JiraSubject(Subject):
             observer.update(page_type='jira', status=self.status)
 
     def get_status(self):
-        return []
+        return None
 
     def set_status(self, status):
         self.status = status
@@ -111,30 +112,40 @@ class JiraSubject(Subject):
             if 'Build' in status: # 종료조건 확인할 것 (Build말고 뭐 있엇을듯)
                 break
             time.sleep(60)
-        return 'Jira Complete'
+        return True
 
 class Viewer(Observer):
 
-    def __init__(self):
-        self.gerrit_status = []
-        self.jira_status = []
-        self.viwer = {
-            'gerrit': [],
-            'jira': []
+    def __init__(self, user):
+        self.gerrit_status = 'Scheduled'
+        self.jira_status = 'Scheduled'
+        self.viewer = {
+            'gerrit': GerritSubject(user),
+            'jira': JiraSubject(user)
         }
 
     def update(self, page_type, status):
         if page_type == 'jira':
-            pass
+            print('jira가 업데이트 되었습니다. : {}'.format(status))
+            self.jira_status = status
         elif page_type == 'gerrit':
-            pass
+            print('gerrit이 업데이트 되었습니다. : {}'.format(status))
+            self.gerrit_status = status
         self.notify()
 
     def register_subject(self, subject):
-        self.viwer[subject].register_observer(self)
+        self.viewer[subject].register_observer(self)
 
     def notify(self):
-        print('CCC Status')
         print('gerrit status : {}'.format(self.gerrit_status))
-        print('jira status : {}'.format(self.jira_status))
-        # 여기서 django로 넘겨줘야함..
+        # print('jira status : {}'.format(self.jira_status))
+        # self.gerrit_status 를 django로 어떻게 넘기지..
+
+if __name__ == '__main__':
+    viewer = Viewer(user={'username': 'minjae.choi', 'password': 'sgu1064018@'})
+    viewer.register_subject('jira')
+    viewer.register_subject('gerrit')
+
+    viewer.viewer['gerrit'].set_status('good')
+    viewer.viewer['jira'].set_status('bad')
+    viewer.viewer['gerrit'].set_status('WOW!')

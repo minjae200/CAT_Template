@@ -10,7 +10,6 @@ from CCC.models import Job, Module
 from CCC.forms import ModuleForm, JobForm
 from CCC.Helper.ViewHelper import *
 from CCC.Helper.DateHelper import *
-from CCC.Helper.ThreadHelper import ThreadPool
 from CCC.Helper.LoginHelper import login_required
 from CCC.Helper.ScheduleHelper import Scheduler
 

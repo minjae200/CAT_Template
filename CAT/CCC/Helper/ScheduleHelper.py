@@ -48,5 +48,4 @@ class Scheduler:
     def run_job(self, job):
         gerrit = Gerrit(self.user)
         gerrit.start_CCC(job)
-        # self.remove_job(job_id)
         return True
