@@ -2,9 +2,10 @@ from django.contrib.auth.decorators import login_required as django_login_requir
 from ldap3 import Server, Connection, SAFE_SYNC
 from functools import wraps
 
-def authenticate(username, password, server_addr='ldap://lge.net'):
+def authenticate(username, password, server_addr='ldap://165.186.39.123'):
     try:
-        server = Server(host=server_addr, port=3268)
+        # ldap://lge.net port 3268 -> ldap://165.186.39.123
+        server = Server(host=server_addr)
         dn = 'ou=LGE Users,dc=lge,dc=net'
         connection = Connection(server, username + '@lge.net', password, client_strategy=SAFE_SYNC, auto_bind=True)
         ldap_result = connection.search(search_base=dn, search_filter='(cn={})'.format(username), attributes=['name', 'department', 'mail'])
@@ -33,4 +34,8 @@ def login_required(view_func):
     return decorator
 
 if __name__ == '__main__':
-    authenticate('minjae.choi', 'sgu1064018@')
+    import time
+    start_time = time.time()
+    print(authenticate('minjae.choi', 'sgu1064018@'))
+
+    print(time.time() - start_time)
