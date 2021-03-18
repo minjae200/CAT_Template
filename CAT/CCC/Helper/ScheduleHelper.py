@@ -1,5 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.base import JobLookupError
+from CCC.Helper.ThreadHelper import ObserverPool
 from CCC.Helper.GerritHelper import Gerrit
 import time
 
@@ -46,6 +47,10 @@ class Scheduler:
             return
     
     def run_job(self, job):
+        print("run_job call")
         gerrit = Gerrit(self.user)
         gerrit.start_CCC(job)
+        observer = ObserverPool(job=self.job, gerrit=gerrit)
+        observer.run_observer()
+        # 소멸
         return True

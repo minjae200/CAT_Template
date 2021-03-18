@@ -4,7 +4,7 @@ from functools import wraps
 
 def authenticate(username, password, server_addr='ldap://165.186.39.123'):
     try:
-        # ldap://lge.net port 3268 -> ldap://165.186.39.123
+        # ldap://lge.net port 3268 (too late server) -> ldap://165.186.39.123 (very fast server)
         server = Server(host=server_addr)
         dn = 'ou=LGE Users,dc=lge,dc=net'
         connection = Connection(server, username + '@lge.net', password, client_strategy=SAFE_SYNC, auto_bind=True)

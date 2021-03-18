@@ -1,8 +1,10 @@
 from abc import ABCMeta, abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from CCC.Helper.GerritHelper import Gerrit
 from CCC.Helper.JiraHelper import Jira
-# from django.shortcuts import redirect
+from CCC.Helper.GerritHelper import Gerrit
+from django.shortcuts import render, get_object_or_404, redirect, reverse
+from django.http import HttpResponseRedirect
+from CCC.models import Job, Module
 import threading, time
 
 class Subject:
@@ -31,10 +33,12 @@ class Observer:
 
 class GerritSubject(Subject):
 
-    def __init__(self, user):
+    def __init__(self, gerrit):
         super().__init__()
-        self.gerrit = Gerrit(user)
+        self.gerrit = gerrit
+        self.gerrit_id = gerrit.gerrit_id
         self.observer_list = []
+        self.status = 'Ready'
         """
         CCC status
         main page 추가사항 : (고민할 것)
@@ -43,7 +47,7 @@ class GerritSubject(Subject):
         ['Ready', 'In Progress', 'Complete']
         + [ 'Ticket', 'TAS', 'Build']
         """
-        self.status = ['Ready']
+        self.status = 'Ready'
 
     def register_observer(self, observer):
         if not observer in self.observer_list:
@@ -57,21 +61,28 @@ class GerritSubject(Subject):
         for observer in self.observer_list:
             observer.update(page_type='gerrit', status=self.status)
 
-    def get_status(self):
-        return self.gerrit.get_status()
-
     def set_status(self, status):
         self.status = status
         self.notify_observers()
 
-    def observe(self, gerrit_id):
+    def observe(self):
+        print("GerritSubject observe call")
+        delay_time = 10
+        pre_status = None
         while True:
-            status = self.get_status(gerrit_id=gerrit_id)
-            if status != self.status:
+            status = self.gerrit.get_status()
+            if status != pre_status:
+                pre_status = status
                 self.set_status(status)
-            if 'COMPLETE' in status:
+            if 'COMPLETE' == status:
+                print("GerritSubject ovserve Break")
                 break
-            time.sleep(30)
+            if 'BUILDING' == status: delay_time = 300
+            elif 'BUILD SUCCESS' == status: delay_time = 10
+            elif 'TESTING' == status: delay_time = 300
+            elif 'TEST PASS' == status or 'TEST FAIL' == status: delay_time = 10
+            print("observe :{}".format(status))
+            time.sleep(delay_time)
         return True
 
 class JiraSubject(Subject):
@@ -83,7 +94,7 @@ class JiraSubject(Subject):
         """
         status = ['Screen', 'Confirm', 'Approval', 'Build']
         """
-        self.status = ['Screen']
+        self.status = 'Screen'
 
     def register_observer(self, observer):
         if not observer in self.observer_list:
@@ -105,24 +116,33 @@ class JiraSubject(Subject):
         self.notify_observers()
 
     def observe(self):
+        print("OBSERVER")
+        delay_time = 10
+        pre_status = None
         while True:
             status = self.get_status()
-            if status:
+            if status != pre_status:
                 self.set_status(status)
-            if 'Build' in status: # 종료조건 확인할 것 (Build말고 뭐 있엇을듯)
+            if 'COMPLETE' == status:
                 break
-            time.sleep(60)
+            if 'BUILDING' == status: delay_time = 300
+            elif 'BUILD SUCCESS' == status: delay_time = 10
+            elif 'TESTING' == status: delay_time = 300
+            elif 'TEST PASS' == status or 'TEST FAIL' == status: delay_time = 10
+            print(status)
+            time.sleep(delay_time)
         return True
 
 class Viewer(Observer):
 
-    def __init__(self, user):
-        self.gerrit_status = 'Scheduled'
-        self.jira_status = 'Scheduled'
-        self.viewer = {
-            'gerrit': GerritSubject(user),
-            'jira': JiraSubject(user)
-        }
+    def __init__(self, job, gerrit):
+        self.gerrit_status = 'Ready'
+        self.jira_status = 'Ready'
+        self.job = job
+        self.gerrit = gerrit
+        self.user = gerrit.user
+        self.gerrit_subject = GerritSubject(gerrit)
+        # self.jira_subject = JiraSubject(gerrit)
 
     def update(self, page_type, status):
         if page_type == 'jira':
@@ -134,15 +154,28 @@ class Viewer(Observer):
         self.notify()
 
     def register_subject(self, subject):
-        self.viewer[subject].register_observer(self)
+        if subject == 'gerrit':
+            self.gerrit_subject.register_observer(self)
+        elif subject == 'jira':
+            self.jira_subject.register_observer(self)
 
     def notify(self):
         print('gerrit status : {}'.format(self.gerrit_status))
+        try:
+            job = Job.objects.get(pk=self.job.id)
+            job.gerrit_status = self.gerrit_status
+            print(job)
+            job.save()
+            print(job)
+            job = get_object_or_404(Job, pk=self.job.id)
+            print(job)
+        except:
+            pass
+        return HttpResponseRedirect(reverse('CCC:main'))
         # print('jira status : {}'.format(self.jira_status))
-        # self.gerrit_status 를 django로 어떻게 넘기지..
 
 if __name__ == '__main__':
-    viewer = Viewer(user={'username': 'minjae.choi', 'password': 'sgu1064018@'})
+    viewer = Viewer(user={'username': 'sel.autolab', 'password': 'automation2019! '})
     viewer.register_subject('jira')
     viewer.register_subject('gerrit')
 

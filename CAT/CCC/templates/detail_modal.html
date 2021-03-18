@@ -45,7 +45,7 @@
           </form>
         </div>
         <button type="button" class="btn btn-primary" id="detailAdd">Add</button>
-        <form name="detailCloseForm">
+        <form name="detailCloseForm" id="detailCloseForm_{{ job.id }}">
           {% csrf_token %}
           <button type="button" class="btn btn-secondary" data-dismiss="modal" id="detailClose" name="detailClose">Close</button>
         </form>

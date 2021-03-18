@@ -1,5 +1,4 @@
 from CCC.Helper.RestHelper import Rest
-# from RestHelper import Rest
 
 class Jira(Rest):
 

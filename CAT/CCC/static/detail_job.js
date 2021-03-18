@@ -1,4 +1,5 @@
 var id;
+
 $('#detailModal').on('show.bs.modal', function (event) {
   var button = $(event.relatedTarget)
   var branch = button.data('job_branch') 
@@ -76,10 +77,19 @@ $('#detailModal').on('hide.bs.modal', function (event) {
   console.log("modal close");
   alert_message = $(this).find('.footer-alert-messages')
   alert_message.html('');
-  var close_form = document.detailCloseForm;
-  close_form.action = "";
-  close_form.method = "post";
-  close_form.submit();
+  let close_forms = document.detailCloseForm;
+  var job_id = id;
+  console.log(job_id);
+  let select_form = close_forms;
+  for (var i=0; i<close_forms.length; i++) {
+    if (close_forms[i].id.indexOf(job_id) !== -1) {
+      select_form = close_forms[i];
+    }
+  }
+  console.log(select_form);
+  select_form.action = "";
+  select_form.method = "post";
+  select_form.submit();
   // var name = module_form.module_name.value
   // var tag = module_form.module_tag.value
   // var hash = module_form.module_hash.value

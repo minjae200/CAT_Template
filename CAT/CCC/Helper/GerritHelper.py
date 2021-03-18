@@ -1,7 +1,7 @@
 import os, sys, json, git
 import subprocess
+import time
 from CCC.Helper.RestHelper import Rest
-from CCC.Helper.ThreadHelper import ObserverPool
 
 class Gerrit(Rest):
 
@@ -38,33 +38,38 @@ class Gerrit(Rest):
         self._git_push()
         self._set_ccc_options()
 
-        observer = ObserverPool(job=job, user=self.user)
-        observer.run_observer(page_id=self.gerrit_id)
-
     # for observer
-    def get_status(self, gerrit_id):
-        target = self.GERRIT_ENDPOINT + '{gerrit_id}/detail'.format(gerrit_id=gerrit_id)
+    def get_status(self):
+        print("gerrit : get_status call")
+        target = self.GERRIT_ENDPOINT + '{gerrit_id}/detail'.format(gerrit_id=self.gerrit_id)
+        print(target)
         response = self.get(target=target)
-        response = json.loads(response.text.replace(']]}\'', ''))
-
-        for resp in reversed(response['message']):
-            if 'Uploaded patch set 1.' in resp:
-                self.status = 'START'
-            elif 'CCC Ticket created' in resp:
-                self.status = 'MAKE TICKET'
-            elif 'Start: https://cerberus.lge.com/jenkins/job' in resp:
-                self.status = 'BUILDING'
-            elif 'Build Successful' in resp:
-                self.status = 'BUILD SUCCESS'
-            elif 'Triggerd' in resp:
-                self.status = 'TESTING'
-            elif 'TV MiniBAT Results' in resp:
-                if 'PASSED' in resp:
-                    self.status = 'TEST PASS'
-                else:
-                    self.status = 'TEST FAIL'
-            elif 'Change has been successfully cherry-picked as':
-                self.status = 'COMPLETE'
+        response = json.loads(response.text.replace(')]}\'', ''))
+        for resp in reversed(response['messages']):
+            try:
+                resp = resp['message']
+                if 'Uploaded patch set 1' in resp:
+                    self.status = 'START'
+                # elif 'CCC Ticket created' in resp:
+                #     self.status = 'MAKE TICKET'
+                # elif 'Start: https://cerberus.lge.com/jenkins/job' in resp:
+                #     self.status = 'BUILDING'
+                # elif 'Build Successful' in resp:
+                #     self.status = 'BUILD SUCCESS'
+                # elif 'Triggerd' in resp:
+                #     self.status = 'TESTING'
+                # elif 'TV MiniBAT Results' in resp:
+                #     if 'PASSED' in resp:
+                #         self.status = 'TEST PASS'
+                #     else:
+                #         self.status = 'TEST FAIL'
+                # elif 'Change has been successfully cherry-picked as':
+                #     self.status = 'COMPLETE'
+                elif 'Verified+1' in resp:
+                    self.status = 'COMPLETE'
+            except Exception:
+                pass
+        return self.status
 
     def _git_clone_meta_lg_webos(self):
         if os.path.exists(self.working_directory):
@@ -116,7 +121,6 @@ class Gerrit(Rest):
             return
         move_dir = 'cd {} && '.format(self.working_directory)
         try:
-            print(self.git.status())
             os.system(move_dir + self.GIT_CONFIG_USER_NAME.format(username=self.user['username']))
             os.system(move_dir + self.GIT_CONFIG_USER_EMAIL.format(useremail='{}@lge.com'.format(self.user['username'])))
             self.git.add('*')
@@ -131,38 +135,39 @@ class Gerrit(Rest):
     def _get_change_id(self):
         move_dir = 'cd {} && '.format(self.working_directory)
         git_log = subprocess.check_output(move_dir + 'git log -1', shell=True).decode('utf-8').split('\n')
-        print(git_log)
         change_id = None
         for log in git_log:
             if 'Change-Id' in log:
-                print(log)
                 change_id = log.split(':')[-1].strip()
-        print(change_id)
         return change_id
 
     def _get_gerrit_id(self, change_id):
         target = self.CHANGE_ENDPOINT + '?q=change:{}'.format(change_id)
-        print(target)
         response = self.get(target=target)
-        print(response.text)
         
         gerrit_id = json.loads(response.text.replace(')]}\'', ''))[0]['_number']
-        print(gerrit_id)
+        print('gerrit_id : {}'.format(gerrit_id))
         return gerrit_id
     
     def _get_patchset(self, gerrit_id):
-        target = self.GERRIT_ENDPOINT + '{gerrit_id}/comments'.format(gerrit_id=gerrit_id)
-        response = self.get(target=target)
-        response = json.loads(response.text.replace(']]}\'', ''))
 
-        patch_set = None
-        if '/COMMIT_MSG' in response:
-            patch_set = response['/COMMIT_MSG'][-1]['patch_set']
+        for _ in range(10):
+            target = self.GERRIT_ENDPOINT + '{gerrit_id}/comments'.format(gerrit_id=gerrit_id)
+            response = self.get(target=target)
+            response = json.loads(response.text.replace(')]}\'', ''))
+
+            patch_set = None
+            if '/COMMIT_MSG' in response:
+                patch_set = response['/COMMIT_MSG'][-1]['patch_set']
+                break
+            time.sleep(10)
         return patch_set
 
     def _set_ccc_options(self):
         patchset = self._get_patchset(self.gerrit_id)
-        print(patchset)
+        print('current patchset : {}'.format(patchset))
+        if patchset is None:
+            return
         target = self.GERRIT_ENDPOINT + '{gerrit_id}/revisions/{patchset}/review'.format(gerrit_id=self.gerrit_id, patchset=patchset)
         data = {
             'drafts': 'PUBLISH_ALL_REVISIONS',
@@ -179,5 +184,8 @@ class Gerrit(Rest):
             'message': 'minjae',
             'reviewers': []
         }
-        response = self.post(target=target, json=json.dumps(data))
-        print(response)
+        response = self.post(target=target, json=data)
+
+if __name__ == '__main__':
+
+    gerrit = Gerrit({'username':'sel.autolab', 'password': 'automation2019!'})
