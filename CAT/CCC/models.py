@@ -17,6 +17,7 @@ class Module(models.Model):
     name = models.CharField(max_length=100)
     tag = models.CharField(max_length=100)
     hash_value = models.CharField(max_length=100)
+    register = models.CharField(max_length=100, default='Unknown')
 
     def __str__(self):
-        return '{}_{}_{}_{}'.format(self.name, self.tag, self.hash_value, self.id)
+        return '{}_{}_{}_{}_{}'.format(self.name, self.tag, self.hash_value, self.id, self.register)

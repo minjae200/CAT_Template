@@ -22,12 +22,14 @@ $('#detailModal').on('show.bs.modal', function (event) {
     let module_tag = module[1];
     let module_hash = module[2];
     let module_id = module[3];
+    let module_register = module[4];
     let loop = i + 1
 
     tbody_html += '<tr><td>' + loop + '</td>'
     tbody_html += '<td>' + module_name + '</td>'
     tbody_html += '<td>' + module_tag + '</td>'
     tbody_html += '<td>' + module_hash + '</td>'
+    tbody_html += '<td>' + module_register + '</td>'
     tbody_html += '<td>\
         <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteModule(' + id + ',' + module_id + ')">\
         delete</button></td></tr>'

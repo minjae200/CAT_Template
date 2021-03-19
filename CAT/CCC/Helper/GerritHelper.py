@@ -48,6 +48,7 @@ class Gerrit(Rest):
         for resp in reversed(response['messages']):
             try:
                 resp = resp['message']
+                print(resp)
                 if 'Uploaded patch set 1' in resp:
                     self.status = 'START'
                 # elif 'CCC Ticket created' in resp:
@@ -124,7 +125,12 @@ class Gerrit(Rest):
             os.system(move_dir + self.GIT_CONFIG_USER_NAME.format(username=self.user['username']))
             os.system(move_dir + self.GIT_CONFIG_USER_EMAIL.format(useremail='{}@lge.com'.format(self.user['username'])))
             self.git.add('*')
-            self.git.commit(m='CCC Auto Create')
+            modules = [(module.name, module.tag) for module in self.job.module_set.all()]
+            modules.sort()
+            summary = ''
+            for module in modules:
+                summary += '{}={}'.format(module[0], module[1])
+            self.git.commit(m=summary)
             self.git.push('origin', 'HEAD:refs/for/{}'.format(self.job.branch))
             self.change_id = self._get_change_id()
             self.gerrit_id = self._get_gerrit_id(change_id=self.change_id)
@@ -173,7 +179,7 @@ class Gerrit(Rest):
             'drafts': 'PUBLISH_ALL_REVISIONS',
             'labels': {
                 'Build': 0,
-                'Code-Review': 0,
+                'Code-Review': 1,
                 'MakeCCCTicket': 0,
                 'Run-Unit-Test': 0,
                 'RunStaticAnalysis': 0,

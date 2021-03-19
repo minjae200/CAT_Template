@@ -18,6 +18,7 @@ scheduler = {}
 # Create your views here.
 @login_required
 def MainView(request):
+    print('Call MainView')
     latest_job_list = Job.objects.all().order_by('-build_start_time')
     paginator = Paginator(latest_job_list, 10)
     page = request.GET.get('page')
@@ -68,7 +69,7 @@ def DetailView(request, job_id):
                     'content': 'Already exist the module'
                 }
             else:
-                new_module = Module.objects.create(job=job, name=module_name, tag=module_tag, hash_value=module_hash)
+                new_module = Module.objects.create(job=job, name=module_name, tag=module_tag, hash_value=module_hash, register=request.session['username'])
                 new_module.save()
                 # messages.success(request, 'Register Success')
                 module['messages'] = {
