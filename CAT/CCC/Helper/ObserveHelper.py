@@ -123,12 +123,10 @@ class JiraSubject(Subject):
             status = self.get_status()
             if status != pre_status:
                 self.set_status(status)
-            if 'COMPLETE' == status:
+            if 'INTEGRATE' == status:
                 break
-            if 'BUILDING' == status: delay_time = 300
-            elif 'BUILD SUCCESS' == status: delay_time = 10
-            elif 'TESTING' == status: delay_time = 300
-            elif 'TEST PASS' == status or 'TEST FAIL' == status: delay_time = 10
+            elif 'APPROVAL' == status: delay_time = 300
+            elif 'SCREEN' == status: continue
             print(status)
             time.sleep(delay_time)
         return True
@@ -164,15 +162,11 @@ class Viewer(Observer):
         try:
             job = Job.objects.get(pk=self.job.id)
             job.gerrit_status = self.gerrit_status
-            print(job)
             job.save()
-            print(job)
-            job = get_object_or_404(Job, pk=self.job.id)
-            print(job)
         except:
             pass
+        print("Call HttpResponseRedirect")
         return HttpResponseRedirect(reverse('CCC:main'))
-        # print('jira status : {}'.format(self.jira_status))
 
 if __name__ == '__main__':
     viewer = Viewer(user={'username': 'sel.autolab', 'password': 'automation2019! '})

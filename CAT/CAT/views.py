@@ -7,6 +7,7 @@ from CAT.forms import LoginForm
 from CCC.Helper.LoginHelper import authenticate, login_required
 
 def LoginView(request):
+    print("!!")
     if request.method == 'POST':
         try:
             form = LoginForm(request.POST)
@@ -22,7 +23,8 @@ def LoginView(request):
                 return HttpResponseRedirect(reverse('CCC:main'))
             else:
                 raise
-        except:
+        except Exception as error:
+            print(error)
             messages.error(request,'username or password not correct')
             return redirect('login')
     else:

@@ -90,7 +90,9 @@
                     ABORT
                 </a>
               </td>
-              <td><h5><span class="badge rounded-pill bg-primary text-white ">{{ job.gerrit_status }}</span></h5></td>
+              <td><span class="badge rounded-pill bg-primary text-white" id="status">
+                {{ job.gerrit_status }}
+              </span></td>
           </tr>
           {% endfor %}
       </tbody>
@@ -104,7 +106,7 @@
 </body>
 <script src="{% static 'offcanvas.js' %}"></script>
 <script src="{% static 'detail_job.js' %}"></script>
-<script src="{% static 'main_button.js' %}"></script>
+<script src="{% static 'status.js' %}"></script>
 {% endblock content %}
 
 {% block footer %}

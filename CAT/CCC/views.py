@@ -123,6 +123,20 @@ def AbortView(request, job_id):
 
 def ForceStartView(request, job_id):
     print("START!!")
+    try:
+        job = Job.objects.filter(pk=job_id)[0]
+        now = current_time()
+        job.build_start_time = now.replace(second=now.second+30)
+        try:
+            scheduler[job.id].remove_job(job.id)
+            if scheduler[job.id]:
+                del scheduler[job.id]
+        except:
+            pass
+        scheduler[job.id].register(job=job)
+    except Exception as Error:
+        print('Force Start Error : {}'.format(Error))
+        pass
     return HttpResponseRedirect(reverse('CCC:main'))
 
 def CreateJobView(request):
@@ -137,7 +151,7 @@ def CreateJobView(request):
                 'password': request.session['password']
             }
             scheduler[job.id] = Scheduler(user=user)
-            scheduler[job.id].register(job=job)
+            return scheduler[job.id].register(job=job)
         form = JobForm()
     else:
         form = JobForm(request.GET)

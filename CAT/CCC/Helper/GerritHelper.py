@@ -51,23 +51,23 @@ class Gerrit(Rest):
                 print(resp)
                 if 'Uploaded patch set 1' in resp:
                     self.status = 'START'
-                # elif 'CCC Ticket created' in resp:
-                #     self.status = 'MAKE TICKET'
-                # elif 'Start: https://cerberus.lge.com/jenkins/job' in resp:
-                #     self.status = 'BUILDING'
-                # elif 'Build Successful' in resp:
-                #     self.status = 'BUILD SUCCESS'
-                # elif 'Triggerd' in resp:
-                #     self.status = 'TESTING'
-                # elif 'TV MiniBAT Results' in resp:
-                #     if 'PASSED' in resp:
-                #         self.status = 'TEST PASS'
-                #     else:
-                #         self.status = 'TEST FAIL'
-                # elif 'Change has been successfully cherry-picked as':
-                #     self.status = 'COMPLETE'
-                elif 'Verified+1' in resp:
+                elif 'CCC Ticket created' in resp:
+                    self.status = 'MAKE TICKET'
+                elif 'Start: https://cerberus.lge.com/jenkins/job' in resp:
+                    self.status = 'BUILDING'
+                elif 'Build Successful' in resp:
+                    self.status = 'BUILD SUCCESS'
+                elif 'Triggerd' in resp:
+                    self.status = 'TESTING'
+                elif 'TV MiniBAT Results' in resp:
+                    if 'PASSED' in resp:
+                        self.status = 'TEST PASS'
+                    else:
+                        self.status = 'TEST FAIL'
+                elif 'Change has been successfully cherry-picked as':
                     self.status = 'COMPLETE'
+                elif 'Verified+1' in resp:
+                    self.status = 'Verified'
             except Exception:
                 pass
         return self.status
