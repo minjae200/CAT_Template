@@ -10,7 +10,7 @@ from CCC.models import Job, Module
 from CCC.forms import ModuleForm, JobForm
 from CCC.Helper.ViewHelper import *
 from CCC.Helper.DateHelper import *
-from CCC.Helper.LoginHelper import login_required
+from CAT.Helper.LoginHelper import login_required
 from CCC.Helper.ScheduleHelper import Scheduler
 
 scheduler = {}
@@ -151,7 +151,7 @@ def CreateJobView(request):
                 'password': request.session['password']
             }
             scheduler[job.id] = Scheduler(user=user)
-            return scheduler[job.id].register(job=job)
+            scheduler[job.id].register(job=job)
         form = JobForm()
     else:
         form = JobForm(request.GET)

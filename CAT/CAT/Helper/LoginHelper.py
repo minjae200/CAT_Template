@@ -4,6 +4,8 @@ from functools import wraps
 
 def authenticate(username, password, server_addr='ldap://165.186.39.123'):
     try:
+        if username == '' or password == '':
+            return dict()
         # ldap://lge.net port 3268 (too late server) -> ldap://165.186.39.123 (very fast server)
         server = Server(host=server_addr)
         dn = 'ou=LGE Users,dc=lge,dc=net'

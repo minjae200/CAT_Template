@@ -4,10 +4,9 @@ from django.http import HttpResponseRedirect, HttpResponse, HttpRequest, JsonRes
 from django.urls import reverse
 from django.contrib import messages
 from CAT.forms import LoginForm
-from CCC.Helper.LoginHelper import authenticate, login_required
+from CAT.Helper.LoginHelper import authenticate, login_required
 
 def LoginView(request):
-    print("!!")
     if request.method == 'POST':
         try:
             form = LoginForm(request.POST)
@@ -24,8 +23,7 @@ def LoginView(request):
             else:
                 raise
         except Exception as error:
-            print(error)
-            messages.error(request,'username or password not correct')
+            messages.error(request,'Please check AD ID or Password')
             return redirect('login')
     else:
         form = LoginForm()

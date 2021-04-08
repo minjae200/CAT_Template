@@ -55,7 +55,10 @@ ROOT_URLCONF = 'CAT.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'CAT/templates'),
+            os.path.join(BASE_DIR, 'CCC/templates')
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -122,5 +125,11 @@ USE_TZ = False
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "CAT/static"),
+    os.path.join(BASE_DIR, "CCC/static")
 )
+
+if __name__ == '__main__':
+    dirname = Path(__file__).resolve().parent.parent
+    DIR = [os.path.join(dirname, 'CAT/templates')]
+    print(DIR)
